@@ -5,3 +5,6 @@ run:
 
 package:
 	@go mod tidy
+
+migrate: 
+	@go run cmd/migrate/migrate.go

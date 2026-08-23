@@ -29,6 +29,19 @@ go.work.sum
 configs/*
 !configs/sam2ooh2.example.yaml
 
+
+# SQLite 데이터베이스 파일
+*.sqlite
+*.sqlite3
+*.db
+*.db3
+
+# SQLite 임시 및 저널 파일 (WAL 모드 등에서 자동 생성됨)
+*.sqlite-shm
+*.sqlite-wal
+*.db-shm
+*.db-wal
+
 # Editor/IDE
 # .idea/
 # .vscode/
