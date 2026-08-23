@@ -19,10 +19,10 @@ func NewUserStore(
 	return &UserStore{db: db}, nil
 }
 
-func (u *UserStore) CreateUser(ctx context.Context, params domain.CreateUserParams) (domain.User, error) {
+func (u *UserStore) CreateUser(ctx context.Context, param domain.CreateUserParam) (domain.User, error) {
 	user := domain.User{
-		Nickname:  params.Nickname,
-		Biography: params.Biography,
+		Nickname:  param.Nickname,
+		Biography: param.Biography,
 	}
 
 	if err := gorm.G[domain.User](u.db.DB).Create(ctx, &user); err != nil {
@@ -32,7 +32,7 @@ func (u *UserStore) CreateUser(ctx context.Context, params domain.CreateUserPara
 	return user, nil
 }
 
-func (u *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParams) (domain.Users, error) {
+func (u *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParam) (domain.Users, error) {
 	db := u.db.WithContext(ctx)
 
 	if len(params.IDs) > 0 {
@@ -64,4 +64,50 @@ func (u *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParams
 	}
 
 	return users, nil
+}
+
+func (u *UserStore) PatchUser(ctx context.Context, params domain.PatchUserParam) error {
+	user := domain.User{
+		Model: gorm.Model{ID: params.ID},
+	}
+
+	if params.Nickname != nil {
+		user.Nickname = *params.Nickname
+	}
+
+	if params.Biography != nil {
+		user.Biography = params.Biography
+	}
+
+	if err := u.db.WithContext(ctx).Updates(user).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *UserStore) PatchUsers(ctx context.Context, param domain.PatchUsersParam) error {
+	users := domain.Users{}
+
+	for _, patchUserParam := range param {
+		user := domain.User{
+			Model: gorm.Model{ID: patchUserParam.ID},
+		}
+
+		if patchUserParam.Nickname != nil {
+			user.Nickname = *patchUserParam.Nickname
+		}
+
+		if patchUserParam.Biography != nil {
+			user.Biography = patchUserParam.Biography
+		}
+
+		users = append(users, user)
+	}
+
+	if err := u.db.WithContext(ctx).Updates(users).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

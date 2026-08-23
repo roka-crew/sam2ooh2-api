@@ -13,12 +13,12 @@ type User struct {
 	Biography *string `gorm:"column:biography;type:varchar(255);"`      // min(0), max(14)
 }
 
-type CreateUserParams struct {
+type CreateUserParam struct {
 	Nickname  string
 	Biography *string
 }
 
-type ListUsersParams struct {
+type ListUsersParam struct {
 	// conditions
 	IDs         []uint
 	Nicknames   []string
@@ -30,4 +30,15 @@ type ListUsersParams struct {
 	// optinos
 	Limit  int
 	Offset int
+}
+
+type PatchUsersParam []PatchUserParam
+
+type PatchUserParam struct {
+	// conditions
+	ID uint
+
+	// fields
+	Nickname  *string
+	Biography *string
 }
