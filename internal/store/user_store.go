@@ -71,50 +71,47 @@ func (s *UserStore) ListUsers(c context.Context, param payload.ListUsersParam) (
 	return users, nil
 }
 
-func (s *UserStore) PatchUser(c context.Context, params payload.PatchUserParam) error {
-	user := domain.User{
-		Model: gorm.Model{ID: params.ID},
+func (s *UserStore) PatchUser(c context.Context, param payload.PatchUserParam) error {
+	updates := map[string]any{}
+
+	if param.Nickname != nil {
+		updates["nickname"] = *param.Nickname
+	}
+	if param.Biography != nil {
+		updates["biography"] = *param.Biography 
 	}
 
-	if params.Nickname != nil {
-		user.Nickname = *params.Nickname
+	if len(updates) == 0 {
+		return nil 
 	}
 
-	if params.Biography != nil {
-		user.Biography = params.Biography
-	}
-
-	if err := s.db.WithContext(c).Updates(user).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return s.db.WithContext(c).Model(&domain.User{}).Where("id = ?", param.ID).Updates(updates).Error
 }
 
 func (s *UserStore) PatchUsers(c context.Context, param payload.PatchUsersParam) error {
-	users := domain.Users{}
+	err := s.db.WithContext(c).Transaction(func(tx *gorm.DB) error {
+		for _, patchUserParam := range param {
+			updates := map[string]any{}
 
-	for _, patchUserParam := range param {
-		user := domain.User{
-			Model: gorm.Model{ID: patchUserParam.ID},
+			if patchUserParam.Nickname != nil {
+				updates["nickname"] = *patchUserParam.Nickname
+			}
+			if patchUserParam.Biography != nil {
+				updates["biography"] = *patchUserParam.Biography
+			}
+
+			if len(updates) == 0 {
+				continue
+			}
+
+			if err := tx.Model(&domain.User{}).Where("id = ?", patchUserParam.ID).Updates(updates).Error; err != nil {
+				return err
+			}
 		}
+		return nil
+	})
 
-		if patchUserParam.Nickname != nil {
-			user.Nickname = *patchUserParam.Nickname
-		}
-
-		if patchUserParam.Biography != nil {
-			user.Biography = patchUserParam.Biography
-		}
-
-		users = append(users, user)
-	}
-
-	if err := s.db.WithContext(c).Updates(users).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (s *UserStore) DeleteUser(c context.Context, param payload.DeleteUserParam) error {
