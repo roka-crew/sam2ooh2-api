@@ -21,10 +21,12 @@ func main() {
 
 			service.NewUserService,
 
+			handler.NewUserHandler,
+
 			app.NewApp,
 		),
 		fx.Invoke(
-			handler.NewUserHandler,
+			handler.UserHandlerRouteSetup,
 		),
 	).Run()
 }

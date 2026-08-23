@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"fmt"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/roka-crew/sam2ooh2-api/internal/app"
 	"github.com/roka-crew/sam2ooh2-api/internal/payload"
@@ -18,17 +16,17 @@ func NewUserHandler(
 	app *app.App,
 	userService *service.UserService,
 ) *UserHandler {
-	userHandler := &UserHandler{
+	return &UserHandler{
 		App:         app,
 		UserService: userService,
 	}
+}
 
+func UserHandlerRouteSetup(userHandler *UserHandler) {
 	users := userHandler.App.Group("/users")
 	{
 		users.Post("/", userHandler.CreateUser)
 	}
-
-	return userHandler
 }
 
 func (u *UserHandler) CreateUser(c fiber.Ctx) error {
@@ -42,7 +40,7 @@ func (u *UserHandler) CreateUser(c fiber.Ctx) error {
 		return err
 	}
 
-	response, err = u.UserService.CreateUser(c, request)
+	response, err = u.UserService.CreateUser(c.Context(), request)
 	if err != nil {
 		return err
 	}
