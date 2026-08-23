@@ -1,0 +1,10 @@
+with-expecter: true
+output: ./mocks
+dir: ./mocks
+outpkg: mocks
+filename: "mock_{{.InterfaceName}}.go"
+
+packages:
+  github.com/roka-crew/sam2ooh2-api/internal/domain:
+    config:
+      all: true

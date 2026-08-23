@@ -45,3 +45,6 @@ configs/*
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# mocks
+mocks
