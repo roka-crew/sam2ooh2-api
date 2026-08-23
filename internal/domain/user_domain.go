@@ -1,8 +1,11 @@
 package domain
 
 import (
+	"github.com/roka-crew/sam2ooh2-api/pkg/query"
 	"gorm.io/gorm"
 )
+
+type Users []User
 
 type User struct {
 	gorm.Model
@@ -13,4 +16,17 @@ type User struct {
 type CreateUserParams struct {
 	Nickname  string
 	Biography *string
+}
+
+type ListUsersParams struct {
+	// conditions
+	IDs         []uint
+	Nicknames   []string
+	Biographies []string
+
+	// sort
+	Sorts query.Sorts
+
+	// pagiantion
+	Page query.Page
 }
