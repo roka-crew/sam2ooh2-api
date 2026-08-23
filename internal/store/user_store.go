@@ -16,7 +16,7 @@ type UserStore struct {
 
 func NewUserStore(
 	db *sqlite.Sqlite,
-) *UserStore {
+) domain.UserStore {
 	return &UserStore{db: db}
 }
 
@@ -78,11 +78,11 @@ func (s *UserStore) PatchUser(c context.Context, param payload.PatchUserParam) e
 		updates["nickname"] = *param.Nickname
 	}
 	if param.Biography != nil {
-		updates["biography"] = *param.Biography 
+		updates["biography"] = *param.Biography
 	}
 
 	if len(updates) == 0 {
-		return nil 
+		return nil
 	}
 
 	return s.db.WithContext(c).Model(&domain.User{}).Where("id = ?", param.ID).Updates(updates).Error

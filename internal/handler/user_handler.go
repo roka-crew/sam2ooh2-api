@@ -3,18 +3,18 @@ package handler
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/roka-crew/sam2ooh2-api/internal/app"
+	"github.com/roka-crew/sam2ooh2-api/internal/domain"
 	"github.com/roka-crew/sam2ooh2-api/internal/payload"
-	"github.com/roka-crew/sam2ooh2-api/internal/service"
 )
 
 type UserHandler struct {
 	App         *app.App
-	UserService *service.UserService
+	UserService domain.UserService
 }
 
 func NewUserHandler(
 	app *app.App,
-	userService *service.UserService,
+	userService domain.UserService,
 ) *UserHandler {
 	return &UserHandler{
 		App:         app,

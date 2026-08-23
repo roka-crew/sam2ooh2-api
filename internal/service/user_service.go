@@ -5,18 +5,18 @@ import (
 	"errors"
 
 	"github.com/roka-crew/sam2ooh2-api/internal/apperr"
+	"github.com/roka-crew/sam2ooh2-api/internal/domain"
 	"github.com/roka-crew/sam2ooh2-api/internal/payload"
-	"github.com/roka-crew/sam2ooh2-api/internal/store"
 	"gorm.io/gorm"
 )
 
 type UserService struct {
-	userStore *store.UserStore
+	userStore domain.UserStore
 }
 
 func NewUserService(
-	userStore *store.UserStore,
-) *UserService {
+	userStore domain.UserStore,
+) domain.UserService {
 	return &UserService{
 		userStore: userStore,
 	}
