@@ -26,6 +26,8 @@ go.work.sum
 
 # env file
 .env
+configs/*
+!configs/sam2ooh2.example.yaml
 
 # Editor/IDE
 # .idea/
