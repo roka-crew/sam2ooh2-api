@@ -15,7 +15,7 @@ type Config struct {
 	Sqlite RDBConfig `yaml:"sqlite"`
 }
 
-func New(path string) (*Config, error) {
+func NewConfig(path string) (*Config, error) {
 	config := &Config{}
 
 	file, err := os.Open(path)
