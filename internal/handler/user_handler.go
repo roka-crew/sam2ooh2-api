@@ -46,7 +46,6 @@ func (u *UserHandler) CreateUser(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("hi3")
 
 	return c.JSON(response)
 }
