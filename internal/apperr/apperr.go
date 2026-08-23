@@ -3,15 +3,26 @@ package apperr
 import (
 	"fmt"
 	"net/http"
+	"runtime"
 )
 
 // AppError는 서비스 전반에서 사용하는 커스텀 에러 타입입니다.
 type AppError struct {
-	Code       string // 내부 에러 코드 (예: "USER_NOT_FOUND")
-	Message    string // 클라이언트 전달용 메시지
-	StatusCode int    // 매핑할 HTTP Status Code
-	Err        error  // 로깅용 원본 에러 (wrapping)
+	Code       string `json:"code"`              // 내부 에러 코드 (예: "USER_NOT_FOUND")
+	Message    string `json:"message"`           // 클라이언트 전달용 메시지
+	StatusCode int    `json:"statusCode"`        // 매핑할 HTTP Status Code
+	Details    any    `json:"details,omitempty"` // 검증 실패 상세 내용 (선택)
+	Err        error  `json:"-"`                 // 로깅용 원본 에러 (wrapping)
 }
+
+// 미리 정의된 에러 (Sentinel Errors)
+var (
+	ErrNotFound     = NewAppError("NOT_FOUND", "요청한 리소스를 찾을 수 없습니다.", http.StatusNotFound, nil)
+	ErrAlreadyExist = NewAppError("ALREADY_EXISTS", "이미 존재하는 리소스입니다.", http.StatusConflict, nil)
+	ErrInvalidInput = NewAppError("INVALID_INPUT", "잘못된 요청 파라미터입니다.", http.StatusBadRequest, nil)
+	ErrUnauthorized = NewAppError("UNAUTHORIZED", "인증이 필요합니다.", http.StatusUnauthorized, nil)
+	ErrInternal     = NewAppError("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.", http.StatusInternalServerError, nil)
+)
 
 func (e *AppError) Error() string {
 	if e.Err != nil {
@@ -34,11 +45,74 @@ func NewAppError(code, message string, statusCode int, err error) *AppError {
 	}
 }
 
-// 미리 정의된 에러 (Sentinel Errors)
-var (
-	ErrNotFound     = NewAppError("NOT_FOUND", "요청한 리소스를 찾을 수 없습니다.", http.StatusNotFound, nil)
-	ErrAlreadyExist = NewAppError("ALREADY_EXISTS", "이미 존재하는 리소스입니다.", http.StatusConflict, nil)
-	ErrInvalidInput = NewAppError("INVALID_INPUT", "잘못된 요청 파라미터입니다.", http.StatusBadRequest, nil)
-	ErrUnauthorized = NewAppError("UNAUTHORIZED", "인증이 필요합니다.", http.StatusUnauthorized, nil)
-	ErrInternal     = NewAppError("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.", http.StatusInternalServerError, nil)
-)
+// WithDetails - Validation 에러 상세 내역을 붙여 새 AppError 복사본 반환
+func (e *AppError) WithDetails(details any) *AppError {
+	return &AppError{
+		Code:       e.Code,
+		Message:    e.Message,
+		StatusCode: e.StatusCode,
+		Details:    details,
+		Err:        e.Err,
+	}
+}
+
+func (e *AppError) WithErr(err error) *AppError {
+	return &AppError{
+		Code:       e.Code,
+		Message:    e.Message,
+		StatusCode: e.StatusCode,
+		Details:    e.Details,
+		Err:        e.Err,
+	}
+}
+
+type InternalError struct {
+	err   error
+	stack []runtime.Frame
+}
+
+func NewInternalError(err error) *InternalError {
+	pcs := make([]uintptr, 10)
+	n := runtime.Callers(2, pcs)
+	frames := runtime.CallersFrames(pcs[:n])
+	var stack []runtime.Frame
+	for {
+		frame, more := frames.Next()
+		stack = append(stack, frame)
+		if !more {
+			break
+		}
+	}
+	return &InternalError{
+		err:   err,
+		stack: stack,
+	}
+}
+
+func (e *InternalError) Error() string {
+	out := fmt.Sprintf("Error: %v\nStack Trace:\n", e.err)
+	for _, frame := range e.stack {
+		out += fmt.Sprintf("  %s:%d %s\n", frame.File, frame.Line, frame.Function)
+	}
+	return out
+}
+
+func (e *InternalError) StackTrace(formats ...func(file, function string, line int) string) string {
+	var out string
+	format := func(file, function string, line int) string {
+		return fmt.Sprintf("%s:%d %s", file, line, function)
+	}
+	if len(formats) > 0 {
+		format = formats[0]
+	}
+
+	for _, frame := range e.stack {
+		out += format(frame.File, frame.Function, frame.Line) + "\n"
+	}
+
+	return out
+}
+
+func (e *InternalError) Unwarp() error {
+	return e.err
+}
