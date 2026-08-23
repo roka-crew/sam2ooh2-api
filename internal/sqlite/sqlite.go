@@ -22,7 +22,7 @@ func NewSqlite(cfg *config.Config) (*Sqlite, error) {
 
 	var gormConfigLogger logger.Interface
 	if cfg.Env == config.EnvDev {
-		gormConfigLogger = logger.Default.LogMode(logger.Silent)
+		gormConfigLogger = logger.Default.LogMode(logger.Info)
 	}
 
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
