@@ -1,9 +1,8 @@
-package dto
+package payload
 
 import "github.com/roka-crew/sam2ooh2-api/pkg/query"
 
 // to service layer
-
 
 // to store layer
 type CreateUserParam struct {

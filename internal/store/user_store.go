@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/roka-crew/sam2ooh2-api/internal/domain"
-	"github.com/roka-crew/sam2ooh2-api/internal/dto"
+	"github.com/roka-crew/sam2ooh2-api/internal/payload"
 	"github.com/roka-crew/sam2ooh2-api/internal/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -20,7 +20,7 @@ func NewUserStore(
 	return &UserStore{db: db}
 }
 
-func (s *UserStore) CreateUser(ctx context.Context, param dto.CreateUserParam) (domain.User, error) {
+func (s *UserStore) CreateUser(ctx context.Context, param payload.CreateUserParam) (domain.User, error) {
 	user := domain.User{
 		Nickname:  param.Nickname,
 		Biography: param.Biography,
@@ -33,7 +33,7 @@ func (s *UserStore) CreateUser(ctx context.Context, param dto.CreateUserParam) (
 	return user, nil
 }
 
-func (s *UserStore) ListUsers(ctx context.Context, params dto.ListUsersParam) (domain.Users, error) {
+func (s *UserStore) ListUsers(ctx context.Context, params payload.ListUsersParam) (domain.Users, error) {
 	db := s.db.WithContext(ctx)
 
 	if len(params.IDs) > 0 {
@@ -67,7 +67,7 @@ func (s *UserStore) ListUsers(ctx context.Context, params dto.ListUsersParam) (d
 	return users, nil
 }
 
-func (s *UserStore) PatchUser(ctx context.Context, params dto.PatchUserParam) error {
+func (s *UserStore) PatchUser(ctx context.Context, params payload.PatchUserParam) error {
 	user := domain.User{
 		Model: gorm.Model{ID: params.ID},
 	}
@@ -87,7 +87,7 @@ func (s *UserStore) PatchUser(ctx context.Context, params dto.PatchUserParam) er
 	return nil
 }
 
-func (s *UserStore) PatchUsers(ctx context.Context, param dto.PatchUsersParam) error {
+func (s *UserStore) PatchUsers(ctx context.Context, param payload.PatchUsersParam) error {
 	users := domain.Users{}
 
 	for _, patchUserParam := range param {
@@ -113,7 +113,7 @@ func (s *UserStore) PatchUsers(ctx context.Context, param dto.PatchUsersParam) e
 	return nil
 }
 
-func (s *UserStore) DeleteUser(ctx context.Context, param dto.DeleteUserParam) error {
+func (s *UserStore) DeleteUser(ctx context.Context, param payload.DeleteUserParam) error {
 	db := s.db.WithContext(ctx)
 
 	if param.ID > 0 {
