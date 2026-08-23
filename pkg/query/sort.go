@@ -12,8 +12,8 @@ type Sort struct {
 type Order string
 
 const (
-	ASC  Order = "ASC"
-	DESC Order = "DESC"
+	OrderASC  Order = "ASC"
+	OrderDESC Order = "DESC"
 )
 
 func (o Order) String() string {
@@ -21,24 +21,24 @@ func (o Order) String() string {
 }
 
 func (o Order) IsDESC() bool {
-	return o == DESC
+	return o == OrderDESC
 }
 
 func NormalizeOrder(s string, defaultOrder Order) Order {
 	upper := strings.ToUpper(strings.TrimSpace(s))
 	switch Order(upper) {
-	case ASC:
-		return ASC
-	case DESC:
-		return DESC
+	case OrderASC:
+		return OrderASC
+	case OrderDESC:
+		return OrderDESC
 	default:
 		if defaultOrder != "" {
 			return defaultOrder
 		}
-		return ASC
+		return OrderASC
 	}
 }
 
 func (o Order) Valid() bool {
-	return o == ASC || o == DESC
+	return o == OrderASC || o == OrderDESC
 }
