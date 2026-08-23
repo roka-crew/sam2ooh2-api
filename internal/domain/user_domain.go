@@ -24,5 +24,5 @@ type UserStore interface {
 }
 
 type UserService interface {
-	CreateUser(context.Context, payload.CreateUserRequest) (payload.CreateUserResponse, error) 
+	CreateUser(context.Context, payload.CreateUserRequest) (payload.CreateUserResponse, error)
 }
