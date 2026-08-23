@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/roka-crew/sam2ooh2-api/internal/domain"
+	"github.com/roka-crew/sam2ooh2-api/internal/dto"
 	"github.com/roka-crew/sam2ooh2-api/internal/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -19,7 +20,7 @@ func NewUserStore(
 	return &UserStore{db: db}
 }
 
-func (s *UserStore) CreateUser(ctx context.Context, param domain.CreateUserParam) (domain.User, error) {
+func (s *UserStore) CreateUser(ctx context.Context, param dto.CreateUserParam) (domain.User, error) {
 	user := domain.User{
 		Nickname:  param.Nickname,
 		Biography: param.Biography,
@@ -32,7 +33,7 @@ func (s *UserStore) CreateUser(ctx context.Context, param domain.CreateUserParam
 	return user, nil
 }
 
-func (s *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParam) (domain.Users, error) {
+func (s *UserStore) ListUsers(ctx context.Context, params dto.ListUsersParam) (domain.Users, error) {
 	db := s.db.WithContext(ctx)
 
 	if len(params.IDs) > 0 {
@@ -66,7 +67,7 @@ func (s *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParam)
 	return users, nil
 }
 
-func (s *UserStore) PatchUser(ctx context.Context, params domain.PatchUserParam) error {
+func (s *UserStore) PatchUser(ctx context.Context, params dto.PatchUserParam) error {
 	user := domain.User{
 		Model: gorm.Model{ID: params.ID},
 	}
@@ -86,7 +87,7 @@ func (s *UserStore) PatchUser(ctx context.Context, params domain.PatchUserParam)
 	return nil
 }
 
-func (s *UserStore) PatchUsers(ctx context.Context, param domain.PatchUsersParam) error {
+func (s *UserStore) PatchUsers(ctx context.Context, param dto.PatchUsersParam) error {
 	users := domain.Users{}
 
 	for _, patchUserParam := range param {
@@ -112,7 +113,7 @@ func (s *UserStore) PatchUsers(ctx context.Context, param domain.PatchUsersParam
 	return nil
 }
 
-func (s *UserStore) DeleteUser(ctx context.Context, param domain.DeleteUserParam) error {
+func (s *UserStore) DeleteUser(ctx context.Context, param dto.DeleteUserParam) error {
 	db := s.db.WithContext(ctx)
 
 	if param.ID > 0 {
