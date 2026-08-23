@@ -42,3 +42,12 @@ type PatchUserParam struct {
 	Nickname  *string
 	Biography *string
 }
+
+type DeleteUserParam struct {
+	// conditions
+	ID       uint
+	Nickname string
+
+	// option
+	IsHardDelete bool
+}

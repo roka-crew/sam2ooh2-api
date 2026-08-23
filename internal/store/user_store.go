@@ -111,3 +111,25 @@ func (u *UserStore) PatchUsers(ctx context.Context, param domain.PatchUsersParam
 
 	return nil
 }
+
+func (u *UserStore) DeleteUser(ctx context.Context, param domain.DeleteUserParam) error {
+	db := u.db.WithContext(ctx)
+
+	if param.ID > 0 {
+		db = db.Where("id = ?", param.ID)
+	}
+
+	if param.Nickname != "" {
+		db = db.Where("nickname = ?", param.Nickname)
+	}
+
+	if param.IsHardDelete {
+		db = db.Unscoped()
+	}
+
+	if err := db.Delete(new(domain.User)).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
