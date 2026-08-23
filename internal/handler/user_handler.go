@@ -16,17 +16,17 @@ func NewUserHandler(
 	app *app.App,
 	userService domain.UserService,
 ) *UserHandler {
-	return &UserHandler{
+	userHandler := &UserHandler{
 		App:         app,
 		UserService: userService,
 	}
-}
 
-func UserHandlerRouteSetup(userHandler *UserHandler) {
 	users := userHandler.App.Group("/users")
 	{
 		users.Post("/", userHandler.CreateUser)
 	}
+
+	return userHandler
 }
 
 func (u *UserHandler) CreateUser(c fiber.Ctx) error {
