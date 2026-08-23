@@ -33,30 +33,34 @@ func (s *UserStore) CreateUser(c context.Context, param payload.CreateUserParam)
 	return user, nil
 }
 
-func (s *UserStore) ListUsers(c context.Context, params payload.ListUsersParam) (domain.Users, error) {
+func (s *UserStore) ListUsers(c context.Context, param payload.ListUsersParam) (domain.Users, error) {
 	db := s.db.WithContext(c)
 
-	if len(params.IDs) > 0 {
-		db = db.Where("id IN ?", params.IDs)
+	if len(param.IDs) > 0 {
+		db = db.Where("id IN ?", param.IDs)
 	}
 
-	if len(params.Biographies) > 0 {
-		db = db.Where("biography IN ?", params.Biographies)
+	if len(param.Nicknames) > 0 {
+		db = db.Where("nickname IN ?", param.Nicknames)
 	}
 
-	for _, sort := range params.Sorts {
+	if len(param.Biographies) > 0 {
+		db = db.Where("biography IN ?", param.Biographies)
+	}
+
+	for _, sort := range param.Sorts {
 		db = db.Order(clause.OrderByColumn{
 			Column: clause.Column{Name: sort.By},
 			Desc:   sort.Order.IsDESC(),
 		})
 	}
 
-	if params.Offset > 0 {
-		db = db.Offset(params.Offset)
+	if param.Offset > 0 {
+		db = db.Offset(param.Offset)
 	}
 
-	if params.Limit > 0 {
-		db = db.Limit(params.Limit)
+	if param.Limit > 0 {
+		db = db.Limit(param.Limit)
 	}
 
 	var users domain.Users
