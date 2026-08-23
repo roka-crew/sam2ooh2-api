@@ -22,9 +22,9 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) CreateUser(ctx context.Context, request payload.CreateUserRequest) (payload.CreateUserResponse, error) {
+func (s *UserService) CreateUser(c context.Context, request payload.CreateUserRequest) (payload.CreateUserResponse, error) {
 	// (1) 사용자의 Nickname 중복 검사
-	listUsersByNickname, err := s.userStore.ListUsers(ctx, payload.ListUsersParam{
+	listUsersByNickname, err := s.userStore.ListUsers(c, payload.ListUsersParam{
 		Nicknames: []string{request.Nickname},
 		Limit:     1,
 	})
@@ -36,7 +36,7 @@ func (s *UserService) CreateUser(ctx context.Context, request payload.CreateUser
 	}
 
 	// (2) 사용자 생성
-	createdUser, err := s.userStore.CreateUser(ctx, payload.CreateUserParam{
+	createdUser, err := s.userStore.CreateUser(c, payload.CreateUserParam{
 		Nickname:  request.Nickname,
 		Biography: request.Biography,
 	})
