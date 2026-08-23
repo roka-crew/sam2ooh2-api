@@ -50,9 +50,13 @@ func (u *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParams
 		})
 	}
 
-	offset := params.Page.GetOffset()
-	limit := params.Page.GetLimit()
-	db = db.Limit(limit).Offset(offset)
+	if params.Offset > 0 {
+		db = db.Offset(params.Offset)
+	}
+
+	if params.Limit > 0 {
+		db = db.Limit(params.Limit)
+	}
 
 	var users domain.Users
 	if err := db.Find(&users).Error; err != nil {

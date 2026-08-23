@@ -27,6 +27,7 @@ type ListUsersParams struct {
 	// sort
 	Sorts query.Sorts
 
-	// pagiantion
-	Page query.Page
+	// optinos
+	Limit  int
+	Offset int
 }
