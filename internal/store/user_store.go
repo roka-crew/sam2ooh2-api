@@ -19,21 +19,21 @@ func NewUserStore(
 	return &UserStore{db: db}
 }
 
-func (u *UserStore) CreateUser(ctx context.Context, param domain.CreateUserParam) (domain.User, error) {
+func (s *UserStore) CreateUser(ctx context.Context, param domain.CreateUserParam) (domain.User, error) {
 	user := domain.User{
 		Nickname:  param.Nickname,
 		Biography: param.Biography,
 	}
 
-	if err := gorm.G[domain.User](u.db.DB).Create(ctx, &user); err != nil {
+	if err := gorm.G[domain.User](s.db.DB).Create(ctx, &user); err != nil {
 		return domain.User{}, err
 	}
 
 	return user, nil
 }
 
-func (u *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParam) (domain.Users, error) {
-	db := u.db.WithContext(ctx)
+func (s *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParam) (domain.Users, error) {
+	db := s.db.WithContext(ctx)
 
 	if len(params.IDs) > 0 {
 		db = db.Where("id IN ?", params.IDs)
@@ -66,7 +66,7 @@ func (u *UserStore) ListUsers(ctx context.Context, params domain.ListUsersParam)
 	return users, nil
 }
 
-func (u *UserStore) PatchUser(ctx context.Context, params domain.PatchUserParam) error {
+func (s *UserStore) PatchUser(ctx context.Context, params domain.PatchUserParam) error {
 	user := domain.User{
 		Model: gorm.Model{ID: params.ID},
 	}
@@ -79,14 +79,14 @@ func (u *UserStore) PatchUser(ctx context.Context, params domain.PatchUserParam)
 		user.Biography = params.Biography
 	}
 
-	if err := u.db.WithContext(ctx).Updates(user).Error; err != nil {
+	if err := s.db.WithContext(ctx).Updates(user).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *UserStore) PatchUsers(ctx context.Context, param domain.PatchUsersParam) error {
+func (s *UserStore) PatchUsers(ctx context.Context, param domain.PatchUsersParam) error {
 	users := domain.Users{}
 
 	for _, patchUserParam := range param {
@@ -105,15 +105,15 @@ func (u *UserStore) PatchUsers(ctx context.Context, param domain.PatchUsersParam
 		users = append(users, user)
 	}
 
-	if err := u.db.WithContext(ctx).Updates(users).Error; err != nil {
+	if err := s.db.WithContext(ctx).Updates(users).Error; err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (u *UserStore) DeleteUser(ctx context.Context, param domain.DeleteUserParam) error {
-	db := u.db.WithContext(ctx)
+func (s *UserStore) DeleteUser(ctx context.Context, param domain.DeleteUserParam) error {
+	db := s.db.WithContext(ctx)
 
 	if param.ID > 0 {
 		db = db.Where("id = ?", param.ID)
