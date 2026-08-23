@@ -15,12 +15,8 @@ type Sqlite struct {
 }
 
 func NewSqlite(cfg *config.Config) (*Sqlite, error) {
-	format := "host=%s port=%d user=%s password=%s dbname=%s sslmode=disable.sqlite"
+	format := "%s.db"
 	dsn := fmt.Sprintf(format,
-		cfg.Sqlite.Host,
-		cfg.Sqlite.Port,
-		cfg.Sqlite.User,
-		cfg.Sqlite.Password,
 		cfg.Sqlite.DBname,
 	)
 
