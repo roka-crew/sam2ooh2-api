@@ -11,22 +11,39 @@ import (
 )
 
 func main() {
+
+	var (
+		storeModule = fx.Module("store",
+			fx.Provide(
+				store.NewUserStore,
+			),
+		)
+
+		serviceModule = fx.Module("service",
+			fx.Provide(
+				service.NewUserService,
+			),
+		)
+
+		handlerModule = fx.Module("module",
+			fx.Provide(
+				handler.NewUserHandler,
+			),
+			fx.Invoke(
+				handler.UserHandlerRouteSetup,
+			),
+		)
+	)
+
 	fx.New(
 		fx.Supply("./configs/sam2ooh2.yaml"),
 		fx.Provide(
 			config.NewConfig,
 			sqlite.NewSqlite,
-
-			store.NewUserStore,
-
-			service.NewUserService,
-
-			handler.NewUserHandler,
-
 			app.NewApp,
 		),
-		fx.Invoke(
-			handler.UserHandlerRouteSetup,
-		),
+		storeModule,
+		serviceModule,
+		handlerModule,
 	).Run()
 }
