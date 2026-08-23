@@ -26,11 +26,8 @@ func main() {
 		)
 
 		handlerModule = fx.Module("handler",
-			fx.Provide(
-				handler.NewUserHandler,
-			),
 			fx.Invoke(
-				handler.UserHandlerRouteSetup,
+				handler.NewUserHandler,
 			),
 		)
 	)
