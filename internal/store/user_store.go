@@ -15,8 +15,8 @@ type UserStore struct {
 
 func NewUserStore(
 	db *sqlite.Sqlite,
-) (*UserStore, error) {
-	return &UserStore{db: db}, nil
+) *UserStore {
+	return &UserStore{db: db}
 }
 
 func (u *UserStore) CreateUser(ctx context.Context, param domain.CreateUserParam) (domain.User, error) {
