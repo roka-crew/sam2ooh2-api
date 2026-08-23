@@ -25,7 +25,7 @@ func main() {
 			),
 		)
 
-		handlerModule = fx.Module("module",
+		handlerModule = fx.Module("handler",
 			fx.Provide(
 				handler.NewUserHandler,
 			),
