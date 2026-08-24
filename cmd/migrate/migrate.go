@@ -19,7 +19,12 @@ func main() {
 		log.Panicf("failed to new sqlite: %v\n", err)
 	}
 
-	if err := sqliteDB.AutoMigrate(new(domain.User)); err != nil {
+	if err := sqliteDB.AutoMigrate(
+		&domain.User{},
+		&domain.Group{},
+		&domain.Chapter{},
+		&domain.Topic{},
+	); err != nil {
 		log.Panicf("failed to auto migrate: %v\n", err)
 	}
 }

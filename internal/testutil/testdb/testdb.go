@@ -25,8 +25,11 @@ func NewTestDBSQLite(t *testing.T) *sqlite.Sqlite {
 	require.NoError(t, err)
 
 	require.NoError(t, db.AutoMigrate(
-		&domain.User{},
 		// 앞으로 추가되는 도메인 모델은 여기 한 곳에만 등록
+		&domain.User{},
+		&domain.Group{},
+		&domain.Chapter{},
+		&domain.Topic{},
 	))
 
 	sqlDB, err := db.DB()
