@@ -83,7 +83,7 @@ func (s *GroupStore) ListGroups(c context.Context, param payload.ListGroupsParam
 	return groups, nil
 }
 
-func (s *GroupStore) PatchGroup(ctx context.Context, param payload.PatchGroupParam) error {
+func (s *GroupStore) PatchGroup(c context.Context, param payload.PatchGroupParam) error {
 	updates := map[string]any{}
 
 	if param.Title != "" {
@@ -106,10 +106,24 @@ func (s *GroupStore) PatchGroup(ctx context.Context, param payload.PatchGroupPar
 		return nil
 	}
 
-	return s.db.WithContext(ctx).Model(&domain.Group{}).Where("id = ?", param.ID).Updates(updates).Error
+	return s.db.WithContext(c).Model(&domain.Group{}).Where("id = ?", param.ID).Updates(updates).Error
 }
 
-func (s *GroupStore) DeleteGroup(ctx context.Context, param payload.DeleteGroupParam) error {
+func (s *GroupStore) DeleteGroup(c context.Context, param payload.DeleteGroupParam) error {
+	db := s.db.WithContext(c)
+
+	if param.ID > 0 {
+		db = db.Where("id = ?", param.ID)
+	}
+
+	if param.IsHardDelete {
+		db = db.Unscoped()
+	}
+
+	if err := db.Delete(new(domain.Group)).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 

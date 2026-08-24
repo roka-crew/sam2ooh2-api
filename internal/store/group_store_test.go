@@ -9,6 +9,7 @@ import (
 	"github.com/roka-crew/sam2ooh2-api/internal/testutil/testdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gorm.io/gorm"
 )
 
 func TestCreateGroup(t *testing.T) {
@@ -267,6 +268,109 @@ func TestPatchGroup(t *testing.T) {
 
 			// when
 			err := groupStore.PatchGroup(t.Context(), tt.param)
+
+			// then
+			tt.expectedError(t, err)
+			tt.checkResult(t, db, tt.seedGroup.ID)
+		})
+	}
+}
+
+func TestDeleteGroup(t *testing.T) {
+	tests := []struct {
+		name string
+
+		seedGroup domain.Group
+		param     payload.DeleteGroupParam
+
+		expectedError func(t *testing.T, err error)
+		checkResult   func(t *testing.T, db *sqlite.Sqlite, groupID uint)
+	}{
+		{
+			name: "(1) 성공 - Soft Delete (기본 삭제)",
+			seedGroup: domain.Group{
+				Title:     "삭제할 그룹",
+				PageCount: 100,
+			},
+			param: payload.DeleteGroupParam{
+				IsHardDelete: false,
+			},
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, db *sqlite.Sqlite, groupID uint) {
+				var result domain.Group
+
+				// 일반 조회 시 조회되지 않아야 함 (RecordNotFound)
+				err := db.First(&result, groupID).Error
+				assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+
+				// Unscoped 조회 시 DeletedAt 값이 채워진 채 존재해야 함
+				err = db.Unscoped().First(&result, groupID).Error
+				require.NoError(t, err)
+				assert.False(t, result.DeletedAt.Time.IsZero())
+			},
+		},
+		{
+			name: "(2) 성공 - Hard Delete (완전 물리 삭제)",
+			seedGroup: domain.Group{
+				Title:     "영구 삭제할 그룹",
+				PageCount: 100,
+			},
+			param: payload.DeleteGroupParam{
+				IsHardDelete: true,
+			},
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, db *sqlite.Sqlite, groupID uint) {
+				var result domain.Group
+
+				// Unscoped 조회 시에도 DB에서 완전히 지워져 없어야 함
+				err := db.Unscoped().First(&result, groupID).Error
+				assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
+			},
+		},
+		{
+			name: "(3) 실패 - ID가 0인 경우 (WHERE 조건 누락으로 인한 전체 삭제 방지)",
+			seedGroup: domain.Group{
+				Title:     "보존될 그룹",
+				PageCount: 100,
+			},
+			param: payload.DeleteGroupParam{
+				ID:           0, // ID 미지정 (Zero Value)
+				IsHardDelete: false,
+			},
+			expectedError: func(t *testing.T, err error) {
+				require.Error(t, err)
+				assert.ErrorIs(t, err, gorm.ErrMissingWhereClause) // GORM 안전장치 에러 검증
+			},
+			checkResult: func(t *testing.T, db *sqlite.Sqlite, groupID uint) {
+				var result domain.Group
+
+				// 삭제가 실패했으므로 데이터가 그대로 남아있어야 함
+				err := db.First(&result, groupID).Error
+				require.NoError(t, err)
+				assert.Equal(t, "보존될 그룹", result.Title)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// given
+			db := testdb.NewTestDBSQLite(t)
+			groupStore := NewGroupStore(db)
+
+			require.NoError(t, db.Create(&tt.seedGroup).Error)
+
+			// 케이스 (3)이 아닌 경우에만 시드 데이터의 ID를 param.ID에 동적 설정
+			if tt.param.ID != 0 || tt.name != "(3) 실패 - ID가 0인 경우 (WHERE 조건 누락으로 인한 전체 삭제 방지)" {
+				tt.param.ID = tt.seedGroup.ID
+			}
+
+			// when
+			err := groupStore.DeleteGroup(t.Context(), tt.param)
 
 			// then
 			tt.expectedError(t, err)
