@@ -82,9 +82,33 @@ func (s *GroupStore) ListGroups(c context.Context, param payload.ListGroupsParam
 
 	return groups, nil
 }
+
 func (s *GroupStore) PatchGroup(ctx context.Context, param payload.PatchGroupParam) error {
-	return nil
+	updates := map[string]any{}
+
+	if param.Title != "" {
+		updates["title"] = param.Title
+	}
+	if param.Author != "" {
+		updates["author"] = param.Author
+	}
+	if param.PageCount > 0 {
+		updates["page_count"] = param.PageCount
+	}
+	if param.Publisher != "" {
+		updates["publisher"] = param.Publisher
+	}
+	if param.Description != "" {
+		updates["description"] = param.Description
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	return s.db.WithContext(ctx).Model(&domain.Group{}).Where("id = ?", param.ID).Updates(updates).Error
 }
+
 func (s *GroupStore) DeleteGroup(ctx context.Context, param payload.DeleteGroupParam) error {
 	return nil
 }

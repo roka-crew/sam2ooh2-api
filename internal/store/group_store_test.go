@@ -5,6 +5,7 @@ import (
 
 	"github.com/roka-crew/sam2ooh2-api/internal/domain"
 	"github.com/roka-crew/sam2ooh2-api/internal/payload"
+	"github.com/roka-crew/sam2ooh2-api/internal/sqlite"
 	"github.com/roka-crew/sam2ooh2-api/internal/testutil/testdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -196,6 +197,80 @@ func TestListGroups(t *testing.T) {
 			// then
 			tt.expectedError(t, err)
 			tt.checkResult(t, groups)
+		})
+	}
+}
+
+func TestPatchGroup(t *testing.T) {
+	tests := []struct {
+		name string
+
+		seedGroup domain.Group
+		param     payload.PatchGroupParam
+
+		expectedError func(t *testing.T, err error)
+		checkResult   func(t *testing.T, db *sqlite.Sqlite, groupID uint)
+	}{
+		{
+			name: "(1) 성공 - Title 및 Author 부분 수정",
+			seedGroup: domain.Group{
+				Title:     "클린 코드",
+				Author:    "로버트 C. 마틴",
+				PageCount: 464,
+				Publisher: "인사이트",
+			},
+			param: payload.PatchGroupParam{
+				Title:  "클린 코드 (개정판)",
+				Author: "Uncle Bob",
+			},
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, db *sqlite.Sqlite, groupID uint) {
+				var updated domain.Group
+				require.NoError(t, db.First(&updated, groupID).Error)
+
+				assert.Equal(t, "클린 코드 (개정판)", updated.Title)
+				assert.Equal(t, "Uncle Bob", updated.Author)
+				assert.Equal(t, 464, updated.PageCount)    // 기존 값 유지 확인
+				assert.Equal(t, "인사이트", updated.Publisher) // 기존 값 유지 확인
+			},
+		},
+		{
+			name: "(2) 성공 - 수정할 필드가 없는 경우 (Zero Value)",
+			seedGroup: domain.Group{
+				Title:     "변경 없음",
+				PageCount: 100,
+			},
+			param: payload.PatchGroupParam{}, // 모든 필드가 Zero Value
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, db *sqlite.Sqlite, groupID uint) {
+				var current domain.Group
+				require.NoError(t, db.First(&current, groupID).Error)
+
+				assert.Equal(t, "변경 없음", current.Title)
+				assert.Equal(t, 100, current.PageCount)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// given
+			db := testdb.NewTestDBSQLite(t)
+			groupStore := NewGroupStore(db)
+
+			require.NoError(t, db.Create(&tt.seedGroup).Error)
+			tt.param.ID = tt.seedGroup.ID // 생성된 시드 데이터의 ID 동적 설정
+
+			// when
+			err := groupStore.PatchGroup(t.Context(), tt.param)
+
+			// then
+			tt.expectedError(t, err)
+			tt.checkResult(t, db, tt.seedGroup.ID)
 		})
 	}
 }
