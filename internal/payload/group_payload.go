@@ -21,7 +21,7 @@ type ListGroupsParam struct {
 	Descriptions []string
 
 	// sort
-	Sorts query.Sort
+	Sorts query.Sorts
 
 	// options
 	Limit  int

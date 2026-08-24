@@ -76,3 +76,126 @@ func TestCreateGroup(t *testing.T) {
 		})
 	}
 }
+
+func TestListGroups(t *testing.T) {
+	// 테스트용 기본 시드 데이터
+	seedGroups := []domain.Group{
+		{
+			Title:       "클린 코드",
+			Author:      "로버트 C. 마틴",
+			PageCount:   464,
+			Publisher:   "인사이트",
+			Description: "가독성 좋은 코드를 작성하는 방법",
+		},
+		{
+			Title:       "리팩터링",
+			Author:      "마틴 파울러",
+			PageCount:   500,
+			Publisher:   "한빛미디어",
+			Description: "코드 구조를 개선하는 아키텍처",
+		},
+		{
+			Title:       "도메인 주도 설계",
+			Author:      "에릭 반스",
+			PageCount:   500,
+			Publisher:   "인사이트",
+			Description: "복잡한 소프트웨어를 다루는 아키텍처",
+		},
+	}
+
+	tests := []struct {
+		name string
+
+		param payload.ListGroupsParam
+
+		expectedError func(t *testing.T, err error)
+		checkResult   func(t *testing.T, groups domain.Groups)
+	}{
+		{
+			name:  "(1) 조건 없이 전체 조회",
+			param: payload.ListGroupsParam{},
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, groups domain.Groups) {
+				assert.Len(t, groups, 3)
+			},
+		},
+		{
+			name: "(2) Publisher 단일 조건 필터링",
+			param: payload.ListGroupsParam{
+				Publishers: []string{"인사이트"},
+			},
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, groups domain.Groups) {
+				assert.Len(t, groups, 2)
+				for _, g := range groups {
+					assert.Equal(t, "인사이트", g.Publisher)
+				}
+			},
+		},
+		{
+			name: "(3) PageCount 및 Publisher 복합 조건 필터링",
+			param: payload.ListGroupsParam{
+				PageCounts: []int{500},
+				Publishers: []string{"인사이트"},
+			},
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, groups domain.Groups) {
+				require.Len(t, groups, 1)
+				assert.Equal(t, "도메인 주도 설계", groups[0].Title)
+				assert.Equal(t, "에릭 반스", groups[0].Author)
+			},
+		},
+		{
+			name: "(4) 페이징 (Limit & Offset) 적용",
+			param: payload.ListGroupsParam{
+				Limit:  1,
+				Offset: 1,
+			},
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, groups domain.Groups) {
+				require.Len(t, groups, 1)
+				assert.Equal(t, "리팩터링", groups[0].Title)
+			},
+		},
+		{
+			name: "(5) 일치하는 조건이 없어 빈 배열 반환",
+			param: payload.ListGroupsParam{
+				Authors: []string{"존재하지 않는 저자"},
+			},
+			expectedError: func(t *testing.T, err error) {
+				require.NoError(t, err)
+			},
+			checkResult: func(t *testing.T, groups domain.Groups) {
+				assert.Empty(t, groups)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// given
+			db := testdb.NewTestDBSQLite(t)
+			groupStore := NewGroupStore(db)
+
+			// 시드 데이터 삽입
+			for i := range seedGroups {
+				require.NoError(t, db.Create(&seedGroups[i]).Error)
+			}
+
+			// when
+			groups, err := groupStore.ListGroups(t.Context(), tt.param)
+
+			// then
+			tt.expectedError(t, err)
+			tt.checkResult(t, groups)
+		})
+	}
+}

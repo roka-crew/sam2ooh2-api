@@ -6,6 +6,7 @@ import (
 	"github.com/roka-crew/sam2ooh2-api/internal/domain"
 	"github.com/roka-crew/sam2ooh2-api/internal/payload"
 	"github.com/roka-crew/sam2ooh2-api/internal/sqlite"
+	"gorm.io/gorm/clause"
 )
 
 type GroupStore struct {
@@ -36,8 +37,50 @@ func (s *GroupStore) CreateGroup(c context.Context, param payload.CreateGroupPar
 	return group, nil
 }
 
-func (s *GroupStore) ListGroups(ctx context.Context, param payload.ListGroupsParam) (domain.Groups, error) {
-	return domain.Groups{}, nil
+func (s *GroupStore) ListGroups(c context.Context, param payload.ListGroupsParam) (domain.Groups, error) {
+	db := s.db.WithContext(c)
+
+	if len(param.IDs) > 0 {
+		db = db.Where("id IN ?", param.IDs)
+	}
+
+	if len(param.Authors) > 0 {
+		db = db.Where("author IN ?", param.Authors)
+	}
+
+	if len(param.PageCounts) > 0 {
+		db = db.Where("page_count IN ?", param.PageCounts)
+	}
+
+	if len(param.Publishers) > 0 {
+		db = db.Where("publisher IN ?", param.Publishers)
+	}
+
+	if len(param.Descriptions) > 0 {
+		db = db.Where("description IN ?", param.Descriptions)
+	}
+
+	for _, sort := range param.Sorts {
+		db = db.Order(clause.OrderByColumn{
+			Column: clause.Column{Name: sort.By},
+			Desc:   sort.Order.IsDESC(),
+		})
+	}
+
+	if param.Offset > 0 {
+		db = db.Offset(param.Offset)
+	}
+
+	if param.Limit > 0 {
+		db = db.Limit(param.Limit)
+	}
+
+	var groups domain.Groups
+	if err := db.Find(&groups).Error; err != nil {
+		return domain.Groups{}, err
+	}
+
+	return groups, nil
 }
 func (s *GroupStore) PatchGroup(ctx context.Context, param payload.PatchGroupParam) error {
 	return nil
