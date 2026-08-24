@@ -25,14 +25,14 @@ type Group struct {
 }
 
 type GroupStore interface {
-	CreateGroup(ctx context.Context, param payload.CreateGroupParam) (Group, error)
-	ListGroups(ctx context.Context, param payload.ListGroupsParam) (Groups, error)
-	PatchGroup(ctx context.Context, param payload.PatchGroupParam) error
-	DeleteGroup(ctx context.Context, param payload.DeleteGroupParam) error
+	CreateGroup(c context.Context, param payload.CreateGroupParam) (Group, error)
+	ListGroups(c context.Context, param payload.ListGroupsParam) (Groups, error)
+	PatchGroup(c context.Context, param payload.PatchGroupParam) error
+	DeleteGroup(c context.Context, param payload.DeleteGroupParam) error
 
 	// N:M 멤버십 조작 API
-	AddUserToGroup(ctx context.Context, param payload.AddUserToGroupParam) error
-	RemoveUserFromGroup(ctx context.Context, param payload.RemoveUserFromGroup) error
-	CountGroupMembers(ctx context.Context, param payload.CountGroupUsers) (int, error)
-	IsUserInGroup(ctx context.Context, param payload.IsUserInGroup) (bool, error)
+	AddUserToGroup(c context.Context, param payload.AddUserToGroupParam) error
+	RemoveUserFromGroup(c context.Context, param payload.RemoveUserFromGroup) error
+	CountGroupMembers(c context.Context, param payload.CountGroupUsers) (int, error)
+	IsUserInGroup(c context.Context, param payload.IsUserInGroup) (bool, error)
 }
